@@ -16,7 +16,7 @@ are easily automated):
     * The first and last words in the title are capitalized, even if they're a 
       article, conjunction, preposition that's less than 4 chars long, or part
       of one.
-    * A period-delimite acronym is uppercased.
+    * A period-delimited acronym is uppercased.
     * All other words are capitalized.
 
 After being put in title case, the title is printed.
