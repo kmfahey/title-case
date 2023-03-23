@@ -55,5 +55,7 @@ def test_has_accented_character_at_word_start():
     titlecased = title_case(title)
     assert titlecased == "On Conducting (Üeber Das Dirigiren): a Treatise on Style in the Execution of Classical Music"
 
-
-
+def test_doesnt_capitalize_ordinals():
+    title = "company b, 307th infantry its history, honor roll, company roster, sept., 1917, may, 1919"
+    titlecased = title_case(title)
+    assert titlecased == "Company B, 307th Infantry Its History, Honor Roll, Company Roster, Sept., 1917, May, 1919"
