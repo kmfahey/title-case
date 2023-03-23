@@ -11,60 +11,70 @@ import re
 import sys
 import functools
 
-# A list of the words that should be lowercased in a title. This list is not
-# authoritative; several competing lists were found. But this list seemed the
-# most inclusive. Note that variations on 'n' have been added, so a title like
-# Toys 'n' Games is capitalized properly.
-arts_conjs_preps = set(("a", "amid", "an", "and", "and", "anti", "as", "at", "atop", "away", "but", "but", "by", "cum",
-                        "down", "for", "for", "from", "gone", "in", "into", "less", "'n", "n'", "'n'", "ʼn", "nʼ",
-                        "ʼnʼ", "’n", "n’", "’n’", "nor", "off", "on", "onto", "or", "out", "over", "past", "per", "pro",
-                        "save", "so", "than", "the", "to", "up", "via", "with", "yet"))
+# There's no single standard grammatical answer to the question "Which words
+# need to be lowercased in a title?" Worse yet, most of the answers that *do*
+# exist would require a grammar parser to implement since some of their rules
+# depend on identifying the grammatical class of adjacent words. This program
+# implements the following simple rules:
+# 
+# * Capitalize the first and last words in the title.
+# * Capitalize every letter in a period-delimited acronym.
+# * Lowercase any single-word article, conjunction, or preposition that's less
+#   than 4 characters.
+# * Lowercase any multi-word conjunction or preposition that's comprised of
+#   words all less than 4 characters.
+# * Capitalize all other words.
 
-# These multi-word prepositions are resolved in a separate pass after the title
-# has been reassembled as a str. This dict re-compiles all the regexes that pass
-# will use.
-prep_phrase_res = {
-    "as for": re.compile("as for", re.I),
-    "as per": re.compile("as per", re.I),
-    "as well as": re.compile("as well as", re.I),
-    "away from": re.compile("away from", re.I),
-    "but for": re.compile("but for", re.I),
-    "due to": re.compile("due to", re.I),
-    "far from": re.compile("far from", re.I),
-    "in case of": re.compile("in case of", re.I),
-    "in face of": re.compile("in face of", re.I),
-    "in view of": re.compile("in view of", re.I),
-    "near to": re.compile("near to", re.I),
-    "off of": re.compile("off of", re.I),
-    "out of": re.compile("out of", re.I),
+
+# The lists of articles, [single-word] conjunctions and [single-word]
+# prepositions that are lowercased in this program.
+
+articles_lt_4_chars = set(("a", "an", "the"))
+conjunctions_lt_4_chars = set(("and", "but", "for", "if", "nor", "or", "so", "who", "yet"))
+prepositions_lt_4_chars = set(("abt.", "aft", "ago", "as", "at", "bar", "by", "c.", "ca.", "ere", "if", "in", "'n'",
+                               "’n’", "ʼnʼ", "now", "o'", "o’", "o'er", "o’er", "of", "off", "on", "out", "oʼ", "oʼer",
+                               "per", "pre", "qua", "re", "sub", "t'", "t’", "to", "tʼ", "up", "v.", "via", "vs.", "w.",
+                               "w/", "w/i", "w/o"))
+
+arts_conjs_preps = articles_lt_4_chars | conjunctions_lt_4_chars | prepositions_lt_4_chars
+
+
+# The multi-word conjunctions & prepositions lowercased by this program. They're
+# resolved in a separate pass using regex matching against the title after most
+# other capitalizations have been done.
+multiw_conj_prep_res = {
+    "à la": re.compile(r"\bà la\b", re.I),
+    "as if": re.compile(r"\bas if\b", re.I),
+    "as for": re.compile(r"\bas for\b", re.I),
+    "as of": re.compile(r"\bas of\b", re.I),
+    "as per": re.compile(r"\bas per\b", re.I),
+    "as to": re.compile(r"\bas to\b", re.I),
+    "but for": re.compile(r"\bbut for\b", re.I),
+    "due to": re.compile(r"\bdue to\b", re.I),
+    "off of": re.compile(r"\boff of\b", re.I),
+    "out of": re.compile(r"\bout of\b", re.I),
+    "per pro": re.compile(r"\bper pro\b", re.I),
+    "up to": re.compile(r"\bup to\b", re.I),
+    "vis-à-vis": re.compile(r"\bvis-à-vis\b", re.I)
 }
 
-# An elaborated regex for matching on the border between a word token and a non-word token.
-tokens_wordbound_re = re.compile("(?<=[A-Za-zÀ-ÿ0-9._'ʼ’])(?=[^A-Za-zÀ-ÿ0-9._'ʼ’])"
-                                     "|"
-                                 "(?<=[^A-Za-zÀ-ÿ0-9._'ʼ’])(?=[A-Za-zÀ-ÿ0-9._'ʼ’])")
 
-
+# Main loop of the utility, when the program is called directly. Iterates over
+# stdin line by line; if a line is empty an empty line printed; otherwise the
+# line is put in title case with title_case() and printed.
 def main():
-    lines = list(sys.stdin)
-    if lines:
-        for line in lines:
-            line = line.strip()
-            if not line:
-                print()
-            else:
-                print(title_case(line))
-    else:
-        line = " ".join(sys.argv[1:])
-        print(title_case(line))
-
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            print()
+        else:
+            print(title_case(line))
 
 # str.capitalize() doesn't capitalize the first alpha char in a string if it's
 # preceded by non-alpha chars. That's not the behavior desired, so this was
 # implemented.
 def capitalize(strval):
     return re.sub("[A-Za-zÀ-ÿ]", lambda m: m.group(0).upper(), strval, count=1)
-
 
 # Matching a length of characters considered as a word-like token. Includes three
 # different apostrophes so contractions parse as one token. So is a period, so
@@ -80,6 +90,12 @@ def is_ordinal_num(strval):
 
 
 def title_case(strval):
+    # An elaborated regex for matching on the border between a word token and a
+    # non-word token.
+    tokens_wordbound_re = re.compile("(?<=[A-Za-zÀ-ÿ0-9._'ʼ’])(?=[^A-Za-zÀ-ÿ0-9._'ʼ’])"
+                                         "|"
+                                     "(?<=[^A-Za-zÀ-ÿ0-9._'ʼ’])(?=[A-Za-zÀ-ÿ0-9._'ʼ’])")
+
     tokens = tokens_wordbound_re.split(strval)
 
     output_list = list()
@@ -108,7 +124,7 @@ def title_case(strval):
     # lowercased but can't be detected using the word-by-word technique the rest
     # of the utility relies on. So after the title has been re-assembled they're
     # grepped for separately.
-    for prep_phrase_str, prep_phrase_re in prep_phrase_res.items():
+    for prep_phrase_str, prep_phrase_re in multiw_conj_prep_res.items():
         output_str = prep_phrase_re.subn(prep_phrase_str, output_str)[0]
 
     # If a phrasal preposition is at the beginning (or end) of the title, then
@@ -118,10 +134,12 @@ def title_case(strval):
     first_word_plus_punct_re = re.compile("^([^A-Za-zÀ-ÿ0-9._'ʼ’]*)"
                                           "(?![0-9]+(?:st|nd|rd|th))"
                                           "([A-Za-zÀ-ÿ0-9._'ʼ’]+)", re.I)
+
     last_word_plus_punct_re = re.compile("(?<=[^A-Za-zÀ-ÿ0-9._'ʼ’])"
-                                         "(?![0-9]+(?:st|nd|rd|th)
+                                         "(?![0-9]+(?:st|nd|rd|th))"
                                          "([A-Za-zÀ-ÿ0-9._'ʼ’]+)"
                                          "([^A-Za-zÀ-ÿ0-9._'ʼ’]*)$", re.I)
+
     output_str = first_word_plus_punct_re.subn(lambda m: m.group(1) + capitalize(m.group(2)), output_str)[0]
     output_str = last_word_plus_punct_re.subn(lambda m: capitalize(m.group(1)) + m.group(2), output_str)[0]
 
