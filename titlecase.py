@@ -13,7 +13,7 @@ are easily automated):
       than 4 characters is lowercased.
     * Any multi-word conjunction or preposition that's comprised of
       words all less than 4 characters is lowercased.
-    * The first and last words in the title are capitalized, even if they're a 
+    * The first and last words in the title are capitalized, even if they're an 
       article, conjunction, preposition that's less than 4 chars long, or part
       of one.
     * A period-delimited acronym is uppercased.
@@ -37,16 +37,23 @@ parser.add_argument("-v", "--version", action="store_true", default=False, dest=
 # The lists of articles, [single-word] conjunctions and [single-word]
 # prepositions that are lowercased in this program.
 
-articles_lt_4_chars = set(("a", "an", "the"))
+articles_lte_4_chars = set(("a", "an", "the"))
 
-conjunctions_lt_4_chars = set(("and", "but", "for", "if", "nor", "or", "so", "who", "yet"))
+conjunctions_lte_4_chars = set(("and", "but", "even", "for", "if", "lest", "nor", "or", "so", "than", "till", "what",
+                                "when", "who", "yet"))
 
-prepositions_lt_4_chars = set(("abt.", "aft", "ago", "as", "at", "bar", "by", "c.", "ca.", "ere", "if", "in", "'n'",
-                               "’n’", "ʼnʼ", "now", "o'", "o’", "o'er", "o’er", "of", "off", "on", "out", "oʼ", "oʼer",
-                               "per", "pre", "qua", "re", "sub", "t'", "t’", "to", "tʼ", "up", "v.", "via", "vs.", "w.",
-                               "w/", "w/i", "w/o"))
 
-arts_conjs_preps_lt_4_chars = articles_lt_4_chars | conjunctions_lt_4_chars | prepositions_lt_4_chars
+
+prepositions_lte_4_chars = set(("abt", "abt.", "aft", "ago", "amid", "anti", "as", "at", "atop", "away", "away", "back",
+                                "bar", "by", "c.", "ca.", "chez", "come", "down", "ere", "from", "from", "here", "home",
+                                "if", "in", "into", "into", "less", "lest", "like", "like", "'n'", "’n’", "near",
+                                "next", "now", "o'", "o’", "o'er", "o’er", "of", "off", "on", "once", "onto", "out",
+                                "over", "oʼ", "oʼer", "past", "per", "plus", "post", "pre", "qua", "re", "sans", "save",
+                                "save", "sub", "t'", "t’", "than", "than", "then", "till", "till", "to", "tʼ", "up",
+                                "upon", "upon", "v.", "via", "vs.", "w.", "w/", "when", "when", "w/i", "with", "with",
+                                "w/o", "ʼnʼ"))
+
+arts_conjs_preps_lte_4_chars = articles_lte_4_chars | conjunctions_lte_4_chars | prepositions_lte_4_chars
 
 
 # The multi-word conjunctions & prepositions lowercased by this program. They're
@@ -158,7 +165,7 @@ def title_case(strval):
 
         # If the token is an article, conjunction, or preposition, it's
         # lowercased.
-        elif token.lower() in arts_conjs_preps_lt_4_chars:
+        elif token.lower() in arts_conjs_preps_lte_4_chars:
             token = token.lower()
 
         # If the token is word-like and didn't match the previous exclusions,

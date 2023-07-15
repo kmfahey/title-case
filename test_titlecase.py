@@ -38,7 +38,7 @@ def test_has_multi_word_preposition_at_beginning():
 def test_has_multi_word_preposition_at_end():
     title = "entering the city with the horse i got off of"
     titlecased = title_case(title)
-    assert titlecased == "Entering the City With the Horse I Got off Of"
+    assert titlecased == "Entering the City with the Horse I Got off Of"
 
 def test_has_accented_character_general_case():
     title = "pascal's pensées"
