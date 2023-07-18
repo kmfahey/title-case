@@ -29,7 +29,7 @@ import argparse
 
 __version__ = "1.0.0"
 
-parser = argparse.ArgumentParser("arachnea")
+parser = argparse.ArgumentParser("titlecase")
 
 parser.add_argument("-v", "--version", action="store_true", default=False, dest="show_version",
                     help="Display version information and exit.")
